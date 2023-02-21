@@ -21,6 +21,13 @@ type HostSet struct {
 	Total int
 }
 
+func NewHost() *Host {
+	return &Host{
+		Resource: &Resource{},
+		Describe: &Describe{},
+	}
+}
+
 type QueryHostRequest struct {
 	PageSize   uint64 `json:"page_size,omitempty"`
 	PageNumber uint64 `json:"page_number,omitempty"`
