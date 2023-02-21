@@ -1,29 +1,55 @@
 package conf
 
+// 全局config实例对象
+// 该config对象在配置加载时初始化
+// 设置为私有变量，防止恶意修改
+var config *Config
+
+// 全局config对象获取函数
+func C() *Config {
+	return config
+}
+
+func NewDefaultConfig() *Config {
+	return &Config{
+		App:   NewDefaultApp(),
+		Log:   NewDefaultLog(),
+		MySQL: NewDefaultMySQl(),
+	}
+}
+
 // Config 应用配置
 // 封装为对象，用于外部对接
 type Config struct {
-	App   *app   `toml:"app"`
+	App   *App   `toml:"app"`
 	Log   *Log   `toml:"log"`
 	MySQL *MySQL `toml:"mysql"`
 }
 
-type app struct {
-	Name      string `toml:"name" env:"APP_NAME"`
-	Host      string `toml:"host" env:"APP_HOST"`
-	Port      string `toml:"port" env:"APP_PORT"`
-	Key       string `toml:"key" env:"APP_KEY"`
-	EnableSSL bool   `toml:"enable_ssl" env:"APP_ENABLE_SSL"`
-	CertFile  string `toml:"cert_file" env:"APP_CERT_FILE"`
-	KeyFile   string `toml:"key_file" env:"APP_KEY_FILE"`
+func NewDefaultApp() *App {
+	return &App{
+		Name: "demo",
+		Host: "127.0.0.1",
+		Port: "8050",
+	}
 }
 
-// Log todo
-type Log struct {
-	Level   string    `toml:"level" env:"LOG_LEVEL"`
-	PathDir string    `toml:"path_dir" env:"LOG_PATH_DIR"`
-	Format  LogFormat `toml:"format" env:"LOG_FORMAT"`
-	To      LogTo     `toml:"to" env:"LOG_TO"`
+type App struct {
+	Name string `toml:"name" env:"APP_NAME"`
+	Host string `toml:"host" env:"APP_HOST"`
+	Port string `toml:"port" env:"APP_PORT"`
+}
+
+func NewDefaultMySQl() *MySQL {
+	return &MySQL{
+		Host:        "127.0.0.1",
+		Port:        "3306",
+		UserName:    "demo",
+		Password:    "123456",
+		Database:    "demo",
+		MaxOpenConn: 200,
+		MaxIdleConn: 100,
+	}
 }
 
 // MySQL todo
@@ -41,4 +67,21 @@ type MySQL struct {
 	MaxLifeTime int `toml:"max_life_time" env:"MYSQL_MAX_LIFE_TIME"`
 	// Idle连接最多允许存活多久
 	MaxIdleTime int `toml:"max_idle_time" env:"MYSQL_MAX_idle_TIME"`
+}
+
+func NewDefaultLog() *Log {
+	return &Log{
+		// debug, info, error, warn
+		Level:  "info",
+		Format: TextFormat,
+		To:     ToStdout,
+	}
+}
+
+// Log todo
+type Log struct {
+	Level   string    `toml:"level" env:"LOG_LEVEL"`
+	PathDir string    `toml:"path_dir" env:"LOG_PATH_DIR"`
+	Format  LogFormat `toml:"format" env:"LOG_FORMAT"`
+	To      LogTo     `toml:"to" env:"LOG_TO"`
 }
