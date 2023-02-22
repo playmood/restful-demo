@@ -104,7 +104,6 @@ func (m *MySQL) GetDB() *sql.DB {
 
 // getDBConn use to get db connection pool
 func (m *MySQL) getDBConn() (*sql.DB, error) {
-	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&multiStatements=true", m.UserName, m.Password, m.Host, m.Port, m.Database)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

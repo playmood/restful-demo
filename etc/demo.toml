@@ -7,8 +7,8 @@ key  = "this is your app key"
 [mysql]
 host = "127.0.0.1"
 port = "3306"
-username = "demo"
-password = "123456"
+username = "root"
+password = "1234567890"
 database = "restfulDemo"
 
 [log]
