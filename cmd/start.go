@@ -4,9 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/playmood/restful-demo/apps"
 	"github.com/playmood/restful-demo/apps/host/http"
-	"github.com/playmood/restful-demo/apps/host/impl"
 	"github.com/playmood/restful-demo/conf"
 	"github.com/spf13/cobra"
+	// 注册所有服务实例
+	_ "github.com/playmood/restful-demo/apps/all"
 )
 
 var (
@@ -29,10 +30,13 @@ var StartCmd = &cobra.Command{
 
 		// 加载host service实体类
 		// service := impl.NewHostServiceImpl()
-		
 		// 注册到IOC
-		apps.HostService = impl.NewHostServiceImpl()
+		// 采用 import _ ....impl完成注册
+		// apps.HostService = impl.NewHostServiceImpl()
 		// 通过Host Api对外提供HTTP Restful接口
+
+		// apps的接口没有保存初始化Config的方法
+		apps.Init()
 		api := http.NewHostHTTPHandler()
 		// 从IOC中获取依赖
 		api.Config()
