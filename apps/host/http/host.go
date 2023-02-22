@@ -14,7 +14,7 @@ func (h *Handler) CreateHost(c *gin.Context) {
 		response.Failed(c.Writer, err)
 		return
 	}
-	// 接口调用 
+	// 接口调用
 	ins, err := h.svc.CreateHost(c.Request.Context(), ins)
 	if err != nil {
 		response.Failed(c.Writer, err)

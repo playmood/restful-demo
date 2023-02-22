@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/playmood/restful-demo/apps"
 	"github.com/playmood/restful-demo/apps/host/http"
 	"github.com/playmood/restful-demo/apps/host/impl"
 	"github.com/playmood/restful-demo/conf"
@@ -27,9 +28,14 @@ var StartCmd = &cobra.Command{
 		}
 
 		// 加载host service实体类
-		service := impl.NewHostServiceImpl()
+		// service := impl.NewHostServiceImpl()
+		
+		// 注册到IOC
+		apps.HostService = impl.NewHostServiceImpl()
 		// 通过Host Api对外提供HTTP Restful接口
-		api := http.NewHostHTTPHandler(service)
+		api := http.NewHostHTTPHandler()
+		// 从IOC中获取依赖
+		api.Config()
 		// 提供一个GIN Router
 		engine := gin.Default()
 		api.Registry(engine)
