@@ -2,11 +2,16 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/logger/zap"
 	"github.com/playmood/restful-demo/apps"
 	"github.com/playmood/restful-demo/conf"
+	"github.com/playmood/restful-demo/protocol"
 	"github.com/spf13/cobra"
+	"os"
+	"os/signal"
+	"syscall"
+
 	// 注册所有服务实例
 	_ "github.com/playmood/restful-demo/apps/all"
 )
@@ -44,11 +49,47 @@ var StartCmd = &cobra.Command{
 		// apps的接口没有保存初始化Config的方法
 		apps.InitImpl()
 		// 提供一个GIN Router
-		engine := gin.Default()
+		//engine := gin.Default()
 		// 注册Ioc的所有http handler
-		apps.InitGin(engine)
-		return engine.Run(conf.C().App.HTTPAddr())
+		//apps.InitGin(engine)
+		//engine.Run(conf.C().App.HTTPAddr())
+		svc := NewManager()
+
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGINT)
+		go svc.WaitStop(ch)
+		return svc.Start()
 	},
+}
+
+func NewManager() *manager {
+	return &manager{
+		http: protocol.NewHttpService(),
+		l:    zap.L().Named("CLI"),
+	}
+}
+
+// 管理所有需要启动的服务
+// 1. HTTP服务的启动
+// 2.
+type manager struct {
+	http *protocol.HttpService
+	l    logger.Logger
+}
+
+func (m *manager) Start() error {
+	return m.http.Start()
+}
+
+// 处理来自外部的中断信号，比如ternimal
+func (m *manager) WaitStop(ch <-chan os.Signal) {
+	for v := range ch {
+		switch v {
+		default:
+			m.l.Infof("received signal %s", v)
+			m.http.Stop()
+		}
+	}
 }
 
 // log 为全局变量, 只需要load 即可全局可用户, 依赖全局配置先初始化

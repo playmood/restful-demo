@@ -48,6 +48,15 @@ func InitImpl() {
 	}
 }
 
+// 已经加载的Gin有哪些
+func LoadGinApps() (names []string) {
+	for k := range ginApps {
+		names = append(names, k)
+	}
+
+	return
+}
+
 type ImplService interface {
 	Config()
 	Name() string
