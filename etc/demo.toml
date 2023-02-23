@@ -11,7 +11,14 @@ username = "root"
 password = "1234567890"
 database = "restfulDemo"
 
+
 [log]
+#DebugLevel: "debug",
+#InfoLevel:  "info",
+#WarnLevel:  "warning",
+#ErrorLevel: "error",
+#FatalLevel: "fatal",
+#PanicLevel: "panic",
 level = "debug"
 dir = "logs"
 format = "text"

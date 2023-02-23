@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/infraboard/mcube/logger/zap"
 	"github.com/playmood/restful-demo/apps"
 	"github.com/playmood/restful-demo/conf"
 	"github.com/spf13/cobra"
@@ -27,6 +29,11 @@ var StartCmd = &cobra.Command{
 			panic(err)
 		}
 
+		// 初始化全局对象loggger
+		if err := loadGlobalLogger(); err != nil {
+			return err
+		}
+
 		// 加载host service实体类
 		// service := impl.NewHostServiceImpl()
 		// 注册到IOC
@@ -42,6 +49,55 @@ var StartCmd = &cobra.Command{
 		apps.InitGin(engine)
 		return engine.Run(conf.C().App.HTTPAddr())
 	},
+}
+
+// log 为全局变量, 只需要load 即可全局可用户, 依赖全局配置先初始化
+func loadGlobalLogger() error {
+	var (
+		logInitMsg string
+		level      zap.Level
+	)
+
+	// 根据Config里面的设置来配置全局Logger对象
+	lc := conf.C().Log
+	// 设置日志级别
+	lv, err := zap.NewLevel(lc.Level)
+	if err != nil {
+		logInitMsg = fmt.Sprintf("%s, use default level INFO", err)
+		level = zap.InfoLevel
+	} else {
+		level = lv
+		logInitMsg = fmt.Sprintf("log level: %s", lv)
+	}
+
+	// 使用默认配置初始化logger的全局配置
+	zapConfig := zap.DefaultConfig()
+	// 配置日志的level级别
+	zapConfig.Level = level
+	// 程序每启动一次，不必都生成一个新的文件
+	zapConfig.Files.RotateOnStartup = false
+
+	// 配置日志输出方式
+	switch lc.To {
+	case conf.ToStdout:
+		// 打印日志到标准输出
+		zapConfig.ToStderr = true
+		zapConfig.ToFiles = false
+	case conf.ToFile:
+		zapConfig.Files.Name = "api.log"
+		zapConfig.Files.Path = lc.PathDir
+	}
+	// 配置日志输出格式
+	switch lc.Format {
+	case conf.JSONFormat:
+		zapConfig.JSON = true
+	}
+	// 把配置应用到全局Logger
+	if err := zap.Configure(zapConfig); err != nil {
+		return err
+	}
+	zap.L().Named("INIT").Info(logInitMsg)
+	return nil
 }
 
 func init() {
