@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/playmood/restful-demo/apps"
-	"github.com/playmood/restful-demo/apps/host/http"
 	"github.com/playmood/restful-demo/conf"
 	"github.com/spf13/cobra"
 	// 注册所有服务实例
@@ -36,13 +35,11 @@ var StartCmd = &cobra.Command{
 		// 通过Host Api对外提供HTTP Restful接口
 
 		// apps的接口没有保存初始化Config的方法
-		apps.Init()
-		api := http.NewHostHTTPHandler()
-		// 从IOC中获取依赖
-		api.Config()
+		apps.InitImpl()
 		// 提供一个GIN Router
 		engine := gin.Default()
-		api.Registry(engine)
+		// 注册Ioc的所有http handler
+		apps.InitGin(engine)
 		return engine.Run(conf.C().App.HTTPAddr())
 	},
 }

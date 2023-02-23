@@ -49,5 +49,5 @@ func init() {
 	// sql这个库是一个框架，驱动是引入依赖时加载的
 	// 我们把app模块比作一个驱动，ioc比作框架
 	// _ import app 将app注册到IOC
-	apps.Registry(impl)
+	apps.RegistryImpl(impl)
 }
