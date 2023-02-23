@@ -31,6 +31,16 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestQuery(t *testing.T) {
+	should := assert.New(t)
+	set, err := service.QueryHost(context.Background(), host.NewQueryHostRequest())
+	if should.NoError(err) {
+		for i := range set.Items {
+			fmt.Print(set.Items[i].Id)
+		}
+	}
+}
+
 func init() {
 	err := conf.LoadConfigFromToml("../../../etc/demo.toml")
 	if err != nil {
@@ -41,4 +51,5 @@ func init() {
 	zap.DevelopmentSetup()
 	// host service的具体实现
 	service = impl.NewHostServiceImpl()
+
 }

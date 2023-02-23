@@ -2,6 +2,8 @@ package host
 
 import (
 	"github.com/go-playground/validator/v10"
+	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -9,21 +11,59 @@ var (
 	validate = validator.New()
 )
 
-type HostSet struct {
-	Items []*Host
-	Total int
+func NewHostSet() *HostSet {
+	return &HostSet{
+		Items: []*Host{},
+	}
 }
 
-func NewHost() *Host {
-	return &Host{
-		Resource: &Resource{},
-		Describe: &Describe{},
+type HostSet struct {
+	Total int     `json:"total"`
+	Items []*Host `json:"items"`
+}
+
+func (s *HostSet) Add(item *Host) {
+	s.Items = append(s.Items, item)
+}
+
+func NewQueryHostFromHTTP(r *http.Request) *QueryHostRequest {
+	req := NewQueryHostRequest()
+	// query string
+	qs := r.URL.Query()
+	pss := qs.Get("page_size")
+	if pss != "" {
+		ps, _ := strconv.Atoi(pss)
+		req.PageSize = uint64(ps)
+	}
+	pns := qs.Get("page_num")
+	if pns != "" {
+		pn, _ := strconv.Atoi(pns)
+		req.PageNumber = uint64(pn)
+	}
+	req.KeyWords = qs.Get("kws")
+	return req
+}
+
+func NewQueryHostRequest() *QueryHostRequest {
+	return &QueryHostRequest{
+		PageSize:   20,
+		PageNumber: 1,
+		KeyWords:   "aaaaa",
 	}
 }
 
 type QueryHostRequest struct {
 	PageSize   uint64 `json:"page_size,omitempty"`
 	PageNumber uint64 `json:"page_number,omitempty"`
+	KeyWords   string `json:"kws"`
+}
+
+func (req *QueryHostRequest) GetPageSize() uint {
+	return uint(req.PageSize)
+}
+
+func (req *QueryHostRequest) GetOffset() int64 {
+	return int64((req.PageNumber - 1) * req.PageSize)
 }
 
 type UpdateHostRequest struct {
@@ -32,6 +72,13 @@ type UpdateHostRequest struct {
 
 type DeleteHostRequest struct {
 	Id string
+}
+
+func NewHost() *Host {
+	return &Host{
+		Resource: &Resource{},
+		Describe: &Describe{},
+	}
 }
 
 // Host模型的定义

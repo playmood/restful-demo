@@ -15,7 +15,10 @@ var impl = &HostServiceImpl{}
 
 // 保证调用该函数前全局conf对象已经初始化
 func NewHostServiceImpl() *HostServiceImpl {
-	return &HostServiceImpl{}
+	return &HostServiceImpl{
+		l:  zap.L().Named("Host"),
+		db: conf.C().MySQL.GetDB(),
+	}
 }
 
 type HostServiceImpl struct {

@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"github.com/infraboard/mcube/logger"
+	"github.com/infraboard/mcube/sqlbuilder"
 	"github.com/playmood/restful-demo/apps/host"
 )
 
@@ -30,8 +31,51 @@ func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (*host
 }
 
 func (i *HostServiceImpl) QueryHost(ctx context.Context, request *host.QueryHostRequest) (*host.HostSet, error) {
+	b := sqlbuilder.NewBuilder(QueryHostSQL)
+	if request.KeyWords != "" {
+		b.Where("r.`name` LIKE ? OR r.description LIKE ? OR r.private_ip LIKE ? OR r.public_ip LIKE ?", "%"+request.KeyWords+"%",
+			"%"+request.KeyWords+"%",
+			request.KeyWords+"%", request.KeyWords+"%")
+	}
+	b.Limit(request.GetOffset(), request.GetPageSize())
+	querySQL, args := b.Build()
+	i.l.Debugf("query sql: %s, ", querySQL, args)
 
-	return nil, nil
+	// prepare语句执行查询SQL
+	stmt, err := i.db.PrepareContext(ctx, querySQL)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	rows, err := stmt.QueryContext(ctx, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	set := host.NewHostSet()
+	for rows.Next() {
+		// 每扫描一行，就要读取出来
+		ins := host.NewHost()
+		if err := rows.Scan(&ins.Id, &ins.Vendor, &ins.Region, &ins.CreateAt, &ins.ExpireAt, &ins.Type, &ins.Name,
+			&ins.Description, &ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.Account, &ins.PublicIP, &ins.PrivateIP,
+			&ins.CPU, &ins.Memory, &ins.GPUSpec, &ins.GPUAmount, &ins.OSType, &ins.OSName, &ins.SerialNumber); err != nil {
+			return nil, err
+		}
+		set.Add(ins)
+	}
+
+	// total统计
+	countSQL, args := b.BuildCount()
+	i.l.Debugf("count sql: %s, args: %v", countSQL, args)
+	countStmt, err := i.db.PrepareContext(ctx, countSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer countStmt.Close()
+	if err := countStmt.QueryRowContext(ctx, args...).Scan(&set.Total); err != nil {
+		return nil, err
+	}
+	return set, nil
 }
 
 func (i *HostServiceImpl) DescribeHost(ctx context.Context, request *host.QueryHostRequest) (*host.Host, error) {

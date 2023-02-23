@@ -22,3 +22,15 @@ func (h *Handler) CreateHost(c *gin.Context) {
 	}
 	response.Success(c.Writer, ins)
 }
+
+// 暴露查询接口
+func (h *Handler) QueryHost(c *gin.Context) {
+	req := host.NewQueryHostFromHTTP(c.Request)
+	// 接口调用
+	set, err := h.svc.QueryHost(c.Request.Context(), req)
+	if err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	response.Success(c.Writer, set)
+}
