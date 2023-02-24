@@ -78,9 +78,26 @@ func (i *HostServiceImpl) QueryHost(ctx context.Context, request *host.QueryHost
 	return set, nil
 }
 
-func (i *HostServiceImpl) DescribeHost(ctx context.Context, request *host.QueryHostRequest) (*host.Host, error) {
+func (i *HostServiceImpl) DescribeHost(ctx context.Context, request *host.DescribeHostRequest) (*host.Host, error) {
+	b := sqlbuilder.NewBuilder(QueryHostSQL)
+	b.Where("r.id = ?", request.Id)
+	describeSQL, args := b.Build()
+	i.l.Debugf("describe sql: %s, ", describeSQL, args)
+	// prepare语句执行查询SQL
+	stmt, err := i.db.PrepareContext(ctx, describeSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
 
-	return nil, nil
+	ins := host.NewHost()
+	err = stmt.QueryRowContext(ctx, args...).Scan(&ins.Id, &ins.Vendor, &ins.Region, &ins.CreateAt, &ins.ExpireAt, &ins.Type, &ins.Name,
+		&ins.Description, &ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.Account, &ins.PublicIP, &ins.PrivateIP,
+		&ins.CPU, &ins.Memory, &ins.GPUSpec, &ins.GPUAmount, &ins.OSType, &ins.OSName, &ins.SerialNumber)
+	if err != nil {
+		return nil, err
+	}
+	return ins, nil
 }
 
 func (i *HostServiceImpl) UpdateHost(ctx context.Context, request *host.UpdateHostRequest) (*host.Host, error) {

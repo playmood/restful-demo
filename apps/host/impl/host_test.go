@@ -41,6 +41,14 @@ func TestQuery(t *testing.T) {
 	}
 }
 
+func TestDescribe(t *testing.T) {
+	should := assert.New(t)
+	ins, err := service.DescribeHost(context.Background(), host.NewDescribeHostRequestWithId("ins-09"))
+	if should.NoError(err) {
+		fmt.Println(ins.Id)
+	}
+}
+
 func init() {
 	err := conf.LoadConfigFromToml("../../../etc/demo.toml")
 	if err != nil {

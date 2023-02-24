@@ -66,6 +66,16 @@ func (req *QueryHostRequest) GetOffset() int64 {
 	return int64((req.PageNumber - 1) * req.PageSize)
 }
 
+func NewDescribeHostRequestWithId(id string) *DescribeHostRequest {
+	return &DescribeHostRequest{
+		Id: id,
+	}
+}
+
+type DescribeHostRequest struct {
+	Id string
+}
+
 type UpdateHostRequest struct {
 	*Describe
 }

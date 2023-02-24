@@ -34,3 +34,15 @@ func (h *Handler) QueryHost(c *gin.Context) {
 	}
 	response.Success(c.Writer, set)
 }
+
+// 暴露Describe接口
+func (h *Handler) DescribeHost(c *gin.Context) {
+	req := host.NewDescribeHostRequestWithId(c.Param("id"))
+	// 接口调用
+	set, err := h.svc.DescribeHost(c.Request.Context(), req)
+	if err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	response.Success(c.Writer, set)
+}
