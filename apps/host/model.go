@@ -100,8 +100,16 @@ type UpdateHostRequest struct {
 	*Host
 }
 
+func NewDeleteHostRequest(id string) *DeleteHostRequest {
+	h := NewHost()
+	h.Id = id
+	return &DeleteHostRequest{
+		Host: h,
+	}
+}
+
 type DeleteHostRequest struct {
-	Id string
+	*Host
 }
 
 func NewHost() *Host {

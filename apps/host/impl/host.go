@@ -132,6 +132,14 @@ func (i *HostServiceImpl) UpdateHost(ctx context.Context, request *host.UpdateHo
 }
 
 func (i *HostServiceImpl) DeleteHost(ctx context.Context, request *host.DeleteHostRequest) (*host.Host, error) {
+	// 检测id是否存在
+	ins, err := i.DescribeHost(ctx, host.NewDescribeHostRequestWithId(request.Id))
+	if err != nil {
+		return nil, fmt.Errorf("input Id is invalid")
+	}
+	if err := i.delete(ctx, ins); err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return ins, nil
 }

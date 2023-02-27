@@ -40,4 +40,10 @@ INSERT INTO resource (
 `
 	UpdateResourceSQL = `UPDATE resource SET vendor=?,region=?,expire_at=?,name=?,description=? WHERE id = ?`
 	UpdateHostSQL     = `UPDATE host SET cpu=?,memory=? WHERE resource_id = ?`
+	DeleteHostSQL     = `
+DELETE FROM host WHERE resource_id = ?
+`
+	DeleteResourceSQL = `
+DELETE FROM resource WHERE id = ?
+`
 )

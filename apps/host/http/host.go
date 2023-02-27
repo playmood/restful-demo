@@ -82,3 +82,20 @@ func (h *Handler) PutHost(c *gin.Context) {
 	}
 	response.Success(c.Writer, set)
 }
+
+func (h *Handler) DeleteHost(c *gin.Context) {
+	req := host.NewDeleteHostRequest(c.Param("id"))
+	// 解析body数据
+	if err := c.Bind(req.Host); err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	req.Id = c.Param("id")
+	// 接口调用
+	set, err := h.svc.DeleteHost(c.Request.Context(), req)
+	if err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	response.Success(c.Writer, set)
+}

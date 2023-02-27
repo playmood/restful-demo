@@ -71,9 +71,10 @@ func (i *HostServiceImpl) update(ctx context.Context, ins *host.Host) error {
 		err          error
 		resourceStmt *sql.Stmt
 		hostStmt     *sql.Stmt
+		tx           *sql.Tx
 	)
 	// 开启事务
-	tx, err := i.db.BeginTx(ctx, nil)
+	tx, err = i.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -108,6 +109,57 @@ func (i *HostServiceImpl) update(ctx context.Context, ins *host.Host) error {
 		return err
 	}
 	_, err = hostStmt.ExecContext(ctx, ins.CPU, ins.Memory, ins.Id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *HostServiceImpl) delete(ctx context.Context, ins *host.Host) error {
+	var (
+		err             error
+		delResourceStmt *sql.Stmt
+		delHostStmt     *sql.Stmt
+		tx              *sql.Tx
+	)
+	// 开启事务
+	tx, err = i.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	// 通过Defer处理事务提交方式
+	// 有报错则rollback
+	defer func() {
+		if err != nil {
+			if err := tx.Rollback(); err != nil {
+				i.l.Error("rollback error, $s", err)
+			}
+		} else {
+			if err := tx.Commit(); err != nil {
+				i.l.Error("commit error, $s", err)
+			}
+
+		}
+	}()
+	// 更新 resource表
+	delResourceStmt, err = tx.PrepareContext(ctx, DeleteResourceSQL)
+	defer delResourceStmt.Close()
+	if err != nil {
+		return err
+	}
+	// vendor=?,region=?,expire_at=?,name=?,description=?
+	_, err = delResourceStmt.Exec(ins.Id)
+	if err != nil {
+		return err
+	}
+	// 更新 host表
+	delHostStmt, err = tx.PrepareContext(ctx, DeleteHostSQL)
+	defer delHostStmt.Close()
+	if err != nil {
+		return err
+	}
+	_, err = delHostStmt.ExecContext(ctx, ins.Id)
 	if err != nil {
 		return err
 	}

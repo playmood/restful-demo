@@ -73,6 +73,15 @@ func TestPut(t *testing.T) {
 	}
 }
 
+func TestDelete(t *testing.T) {
+	should := assert.New(t)
+	req := host.NewDeleteHostRequest("ins-02")
+	ins, err := service.DeleteHost(context.Background(), req)
+	if should.NoError(err) {
+		fmt.Println(ins.Id)
+	}
+}
+
 func init() {
 	err := conf.LoadConfigFromToml("../../../etc/demo.toml")
 	if err != nil {
