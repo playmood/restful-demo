@@ -38,4 +38,6 @@ INSERT INTO resource (
 		resource AS r
 		LEFT JOIN host AS h ON r.id = h.resource_id
 `
+	UpdateResourceSQL = `UPDATE resource SET vendor=?,region=?,expire_at=?,name=?,description=? WHERE id = ?`
+	UpdateHostSQL     = `UPDATE host SET cpu=?,memory=? WHERE resource_id = ?`
 )

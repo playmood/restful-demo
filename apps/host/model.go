@@ -1,6 +1,7 @@
 package host
 
 import (
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"net/http"
 	"strconv"
@@ -76,8 +77,27 @@ type DescribeHostRequest struct {
 	Id string
 }
 
+func NewPutUpdateHostRequest(id string) *UpdateHostRequest {
+	h := NewHost()
+	h.Id = id
+	return &UpdateHostRequest{
+		Mode: PUT,
+		Host: h,
+	}
+}
+
+func NewPatchUpdateHostRequest(id string) *UpdateHostRequest {
+	h := NewHost()
+	h.Id = id
+	return &UpdateHostRequest{
+		Mode: PATCH,
+		Host: h,
+	}
+}
+
 type UpdateHostRequest struct {
-	*Describe
+	Mode UPDATE_MODE `json:"update_mode"`
+	*Host
 }
 
 type DeleteHostRequest struct {
@@ -97,6 +117,27 @@ type Host struct {
 	*Resource
 	// 资源独有属性
 	*Describe
+}
+
+// 全量更新
+func (h *Host) Put(ins *Host) error {
+	if ins.Id != h.Id {
+		return fmt.Errorf("id not euqal")
+	}
+	*h.Describe = *ins.Describe
+	*h.Resource = *ins.Resource
+	return nil
+}
+
+// 局部更新
+func (h *Host) Patch(ins *Host) error {
+	if ins.Name != "" {
+		h.Name = ins.Name
+	}
+	if ins.CPU != 0 {
+		h.CPU = ins.CPU
+	}
+	return nil
 }
 
 func (h *Host) Validate() error {
@@ -149,3 +190,10 @@ type Describe struct {
 	OSName       string `json:"os_name"`                    // 操作系统名称
 	SerialNumber string `json:"serial_number"`              // 序列号
 }
+
+type UPDATE_MODE string
+
+const (
+	PUT   UPDATE_MODE = "PUT"
+	PATCH UPDATE_MODE = "PATCH"
+)

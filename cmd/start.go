@@ -56,6 +56,8 @@ var StartCmd = &cobra.Command{
 		svc := NewManager()
 
 		ch := make(chan os.Signal, 1)
+		// channel是一种复合数据接口，可以当成一个容器，本身不会自动释放
+		defer close(ch)
 		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGINT)
 		go svc.WaitStop(ch)
 		return svc.Start()

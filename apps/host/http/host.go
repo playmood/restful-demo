@@ -46,3 +46,39 @@ func (h *Handler) DescribeHost(c *gin.Context) {
 	}
 	response.Success(c.Writer, set)
 }
+
+// 暴露Patch接口
+func (h *Handler) PatchHost(c *gin.Context) {
+	req := host.NewPatchUpdateHostRequest(c.Param("id"))
+	// 解析body数据
+	if err := c.Bind(req.Host); err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	req.Id = c.Param("id")
+	// 接口调用
+	set, err := h.svc.UpdateHost(c.Request.Context(), req)
+	if err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	response.Success(c.Writer, set)
+}
+
+// 暴露Put接口
+func (h *Handler) PutHost(c *gin.Context) {
+	req := host.NewPutUpdateHostRequest(c.Param("id"))
+	// 解析body数据
+	if err := c.Bind(req.Host); err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	req.Id = c.Param("id")
+	// 接口调用
+	set, err := h.svc.UpdateHost(c.Request.Context(), req)
+	if err != nil {
+		response.Failed(c.Writer, err)
+		return
+	}
+	response.Success(c.Writer, set)
+}

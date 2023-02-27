@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/sqlbuilder"
 	"github.com/playmood/restful-demo/apps/host"
@@ -101,8 +102,33 @@ func (i *HostServiceImpl) DescribeHost(ctx context.Context, request *host.Descri
 }
 
 func (i *HostServiceImpl) UpdateHost(ctx context.Context, request *host.UpdateHostRequest) (*host.Host, error) {
-
-	return nil, nil
+	// 获取已有对象
+	ins, err := i.DescribeHost(ctx, host.NewDescribeHostRequestWithId(request.Id))
+	if err != nil {
+		return nil, err
+	}
+	// 根据更新模式更新对象
+	switch request.Mode {
+	case host.PATCH:
+		if err := ins.Patch(request.Host); err != nil {
+			return nil, err
+		}
+	case host.PUT:
+		if err := ins.Put(request.Host); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("update mode only support PUT and PATCH")
+	}
+	// 更新数据库中的数据
+	if err := ins.Validate(); err != nil {
+		return nil, err
+	}
+	if err := i.update(ctx, ins); err != nil {
+		return nil, err
+	}
+	// 返回更新后的对象
+	return ins, nil
 }
 
 func (i *HostServiceImpl) DeleteHost(ctx context.Context, request *host.DeleteHostRequest) (*host.Host, error) {
