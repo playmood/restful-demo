@@ -49,10 +49,35 @@ func TestDescribe(t *testing.T) {
 	}
 }
 
+//{
+//"id": "ins-10",
+//"vendor": 0,
+//"region": "cn-beijing",
+//"create_at": 1677141684103,
+//"expire_at": 0,
+//"type": "sm3",
+//"name": "hahahaha",
+//"description": "",
+//"status": "",
+//"tags": null,
+//"update_at": 0,
+//"sync_at": 0,
+//"accout": "",
+//"public_ip": "10.2.1.3",
+//"private_ip": "",
+//"cpu": 2,
+//"memory": 4096,
+//"gpu_amount": 0,
+//"gpu_spec": "",
+//"os_type": "",
+//"os_name": "",
+//"serial_number": ""
+//}
+
 func TestPatch(t *testing.T) {
 	should := assert.New(t)
-	req := host.NewPatchUpdateHostRequest("ins-07")
-	req.Name = "么么哒"
+	req := host.NewPatchUpdateHostRequest("ins-10")
+	req.Name = "ddtest"
 	ins, err := service.UpdateHost(context.Background(), req)
 	if should.NoError(err) {
 		fmt.Println(ins.Id)

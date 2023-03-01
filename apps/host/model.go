@@ -3,6 +3,7 @@ package host
 import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/imdario/mergo"
 	"net/http"
 	"strconv"
 	"time"
@@ -139,13 +140,13 @@ func (h *Host) Put(ins *Host) error {
 
 // 局部更新
 func (h *Host) Patch(ins *Host) error {
-	if ins.Name != "" {
-		h.Name = ins.Name
-	}
-	if ins.CPU != 0 {
-		h.CPU = ins.CPU
-	}
-	return nil
+	//if ins.Name != "" {
+	//	h.Name = ins.Name
+	//}
+	//if ins.CPU != 0 {
+	//	h.CPU = ins.CPU
+	//}
+	return mergo.MergeWithOverwrite(h, ins)
 }
 
 func (h *Host) Validate() error {
