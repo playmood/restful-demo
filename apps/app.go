@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/playmood/restful-demo/apps/host"
+	"google.golang.org/grpc"
 )
 
 // IOC 容器层： 管理所有的服务实例
@@ -15,6 +16,7 @@ var (
 	// 维护当前所有的服务
 	implApps = map[string]ImplService{}
 	ginApps  = map[string]GinService{}
+	grpcApps = map[string]GrpcService{}
 )
 
 func RegistryImpl(svc ImplService) {
@@ -27,6 +29,14 @@ func RegistryImpl(svc ImplService) {
 	if v, ok := svc.(host.Service); ok {
 		HostService = v
 	}
+}
+
+func RegistryGrpc(svc GrpcService) {
+	// 服务实例注册到svcs map 当中
+	if _, ok := grpcApps[svc.Name()]; ok {
+		panic(fmt.Sprintf("service %s has registried", svc.Name()))
+	}
+	grpcApps[svc.Name()] = svc
 }
 
 // 如果指定了具体类型，就导致每增加一种类型就要多一个Get方法
@@ -43,6 +53,9 @@ func GetImpl(name string) interface{} {
 
 // 用于初始化 注册到IOC容器里面的所有服务
 func InitImpl() {
+	for _, v := range grpcApps {
+		v.Config()
+	}
 	for _, v := range implApps {
 		v.Config()
 	}
@@ -51,6 +64,15 @@ func InitImpl() {
 // 已经加载的Gin有哪些
 func LoadGinApps() (names []string) {
 	for k := range ginApps {
+		names = append(names, k)
+	}
+
+	return
+}
+
+// 已经加载的Grpc有哪些
+func LoadGrpcApps() (names []string) {
+	for k := range grpcApps {
 		names = append(names, k)
 	}
 
@@ -70,6 +92,12 @@ type GinService interface {
 	Config()
 }
 
+type GrpcService interface {
+	Registry(r *grpc.Server)
+	Name() string
+	Config()
+}
+
 func RegistryGin(svc GinService) {
 	// 服务实例注册到svcs map当中
 	if _, ok := ginApps[svc.Name()]; ok {
@@ -85,6 +113,18 @@ func InitGin(r gin.IRouter) {
 	}
 	// 再完成handler的注册
 	for _, v := range ginApps {
+		v.Registry(r)
+	}
+}
+
+// 把所有实现Grpc接口的实例类注册到grpc server里面
+func InitGrpc(r *grpc.Server) {
+	// 先初始化好所有对象
+	for _, v := range grpcApps {
+		v.Config()
+	}
+	// 再完成handler的注册
+	for _, v := range grpcApps {
 		v.Registry(r)
 	}
 }

@@ -60,13 +60,18 @@ var StartCmd = &cobra.Command{
 		defer close(ch)
 		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGINT)
 		go svc.WaitStop(ch)
+		// grpc服务在后台
+		go svc.grpc.Start()
 		return svc.Start()
+		//svc.grpc.Start()
+		//return nil
 	},
 }
 
 func NewManager() *manager {
 	return &manager{
 		http: protocol.NewHttpService(),
+		grpc: protocol.NewGRPCService(),
 		l:    zap.L().Named("CLI"),
 	}
 }
@@ -76,6 +81,7 @@ func NewManager() *manager {
 // 2.
 type manager struct {
 	http *protocol.HttpService
+	grpc *protocol.GRPCService
 	l    logger.Logger
 }
 
@@ -88,7 +94,11 @@ func (m *manager) WaitStop(ch <-chan os.Signal) {
 	for v := range ch {
 		switch v {
 		default:
+			// 先关闭内部调用 再关闭外部调用
 			m.l.Infof("received signal %s", v)
+			if err := m.grpc.Stop(); err != nil {
+				m.l.Error(err)
+			}
 			m.http.Stop()
 		}
 	}

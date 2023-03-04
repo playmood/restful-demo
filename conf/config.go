@@ -58,6 +58,10 @@ func (a *App) HTTPAddr() string {
 	return fmt.Sprintf("%s:%s", a.Host, a.Port)
 }
 
+func (a *App) GrpcAddr() string {
+	return fmt.Sprintf("%s:%s", a.Host, fmt.Sprintf("1%s", a.Port))
+}
+
 func NewDefaultMySQl() *MySQL {
 	return &MySQL{
 		Host:        "127.0.0.1",
