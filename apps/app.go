@@ -2,6 +2,7 @@ package apps
 
 import (
 	"fmt"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/playmood/restful-demo/apps/host"
 	"google.golang.org/grpc"
@@ -14,9 +15,10 @@ var (
 	// 模块多起来，需要抽象，使用interface{} + 断言
 	HostService host.Service
 	// 维护当前所有的服务
-	implApps = map[string]ImplService{}
-	ginApps  = map[string]GinService{}
-	grpcApps = map[string]GrpcService{}
+	implApps    = map[string]ImplService{}
+	ginApps     = map[string]GinService{}
+	grpcApps    = map[string]GrpcService{}
+	restfulApps = map[string]RestfulService{}
 )
 
 func RegistryImpl(svc ImplService) {
@@ -39,10 +41,43 @@ func RegistryGrpc(svc GrpcService) {
 	grpcApps[svc.Name()] = svc
 }
 
+func RegistryRestful(svs RestfulService) {
+	// 服务实例注册到svcs map 当中
+	if _, ok := restfulApps[svs.Name()]; ok {
+		panic(fmt.Sprintf("service %s has registried", svs.Name()))
+	}
+	restfulApps[svs.Name()] = svs
+}
+
+// 注册restful的webservice
+// restful container，类似于一个root Router
+func InitRestful(r *restful.Container) {
+	// 先初始化好所有对象
+	for _, v := range restfulApps {
+		v.Config()
+	}
+	// 再完成handler的注册
+	for _, v := range restfulApps {
+		ws := new(restful.WebService)
+		r.Add(ws)
+		v.Registry(ws)
+	}
+}
+
 // 如果指定了具体类型，就导致每增加一种类型就要多一个Get方法
 // 返回空接口，使用时，由使用方进行断言
 func GetImpl(name string) interface{} {
 	for k, v := range implApps {
+		if k == name {
+			return v
+		}
+	}
+
+	return nil
+}
+
+func GetGrpcApp(name string) interface{} {
+	for k, v := range grpcApps {
 		if k == name {
 			return v
 		}
@@ -79,6 +114,14 @@ func LoadGrpcApps() (names []string) {
 	return
 }
 
+func LoadRestfulApps() (names []string) {
+	for k := range restfulApps {
+		names = append(names, k)
+	}
+
+	return
+}
+
 type ImplService interface {
 	Config()
 	Name() string
@@ -94,6 +137,12 @@ type GinService interface {
 
 type GrpcService interface {
 	Registry(r *grpc.Server)
+	Name() string
+	Config()
+}
+
+type RestfulService interface {
+	Registry(ws *restful.WebService)
 	Name() string
 	Config()
 }
